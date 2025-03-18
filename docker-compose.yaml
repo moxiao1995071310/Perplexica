@@ -15,7 +15,7 @@ services:
       dockerfile: backend.dockerfile
     image: itzcrazykns1337/perplexica-backend:main
     environment:
-      - SEARXNG_API_URL=http://searxng:8080
+      - SEARXNG_API_URL=http://host.docker.internal:4000
     depends_on:
       - searxng
     ports:
@@ -24,8 +24,8 @@ services:
       - backend-dbstore:/home/perplexica/data
       - uploads:/home/perplexica/uploads
       - ./config.toml:/home/perplexica/config.toml
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
+    #extra_hosts:
+    #  - 'host.docker.internal:host-gateway'
     networks:
       - perplexica-network
     restart: unless-stopped
@@ -46,9 +46,31 @@ services:
       - perplexica-network
     restart: unless-stopped
 
+  redis:
+    image: redis:latest
+    volumes:
+      - redis-data:/data
+    networks:
+      - perplexica-network
+    restart: unless-stopped
+
+  pythonweb:
+    build:
+      context: .
+      dockerfile: python_web.dockerfile
+    image: itzcrazykns1337/pythonweb:main
+    depends_on:
+      - redis
+    ports:
+      - 8000:8000
+    networks:
+      - perplexica-network
+    restart: unless-stopped
+
 networks:
   perplexica-network:
 
 volumes:
   backend-dbstore:
   uploads:
+  redis-data:
